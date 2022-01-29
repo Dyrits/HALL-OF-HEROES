@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-let uri = "mongodb://localhost/supers";
+let uri = process.env.NODE_ENV === "PRODUCTION" ? process.env.MONGODB_URI : "mongodb://localhost/supers";
 
 mongoose.connect(uri, {
     useNewUrlParser: true,
