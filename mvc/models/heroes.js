@@ -18,7 +18,10 @@ const heroSchema = new mongoose.Schema({
 });
 
 const squadSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true }
+    name: { type: String, required: true, unique: true },
+    headquarter: String
 });
 
+
 mongoose.model("Hero", heroSchema);
+mongoose.model("Squad", squadSchema);

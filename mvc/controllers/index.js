@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Hero = mongoose.model("Hero");
+const Squad = mongoose.model("Squad");
 const { heroes } = require("../../data");
 
 getIndex = function(req, res, next) {
@@ -9,18 +10,24 @@ getIndex = function(req, res, next) {
 getHeroesIndex = function(req, res, next) {
     Hero.find((error, heroes) => {
         if (error) { return res.send({ error }); }
-        res.render("heroes", { title: "Hall of Heroes", heroes: heroes });
+        res.render("heroes", {title: "Hall of Heroes", heroes });
     });
 }
 
 getHeroesForm = function(req, res, next) {
-    res.render("create-a-hero", { title: "Create a Hero" });
+    Squad.find((error, squads) => {
+        if (error) { return res.send({error}); }
+        res.render("create-a-hero", { title: "Create a Hero", squads });
+    })
 }
 
 getUpdateForm = function({ params }, res, next) {
     Hero.findById(params.id, (error, hero) => {
         if (error) { return res.send({ error }); }
-        res.render("update-hero", { title: "Update Hero", hero: hero})
+        Squad.find((error, squads) => {
+            if (error) { return res.send({ error }); }
+            res.render("update-hero", { title: "Update Hero", hero, squads })
+        })
     })
 }
 
@@ -39,6 +46,7 @@ createNewHero = function({ body }, res) {
         }
     }
     body.origin && ( hero.origin = body.origin );
+    body.squad && (hero.squad = body.squad);
     Hero.create(hero, (error, newHero) => {
         if (error) { return res.send({ error }); }
         res.redirect("/heroes");
@@ -84,7 +92,34 @@ reset = function (req, res) {
     });
 }
 
+getSquadsIndex = function(req, res) {
+    Squad.find((error, squads) => {
+        if (error) { return res.send({ error }); }
+        res.render("squads", { title: "Squads", squads });
+    })
+}
+
+getSquadForm = function(req, res) {
+    res.render("create-squad", { title: "Create a Squad"});
+}
+
+createSquad = function({ body }, res) {
+    let { name, headquarter } = body;
+    headquarter || (headquarter = "Unknown");
+    let squad = { name, headquarter };
+    Squad.create(squad, (error) => {
+        if (error) { return res.send({ error }); }
+        res.redirect("/squads");
+    })
+}
+
+deleteSquad = function({ params }, res) {
+    Squad.findByIdAndRemove(params.id, (error) => {
+        if (error) { return res.send({ error }); }
+        res.redirect("/squads");
+    })
+}
 
 module.exports = {
-    getIndex, getHeroesIndex, getHeroesForm, getUpdateForm, createNewHero, updateHero, deleteHero, reset
+    getIndex, getHeroesIndex, getHeroesForm, getUpdateForm, createNewHero, updateHero, deleteHero, reset, getSquadsIndex, getSquadForm, createSquad, deleteSquad
 };

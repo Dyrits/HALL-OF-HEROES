@@ -11,6 +11,30 @@
         }
         %>
 
+        <div class="d-flex jc-sb" style="width: 600px; align-items: center; ">
+            <div class="input-group">
+                <label>Name</label>
+                <input type="text" name="name" required <% if(name) { %>value="<%= name %>" <% } %>>
+            </div>
+
+
+            <% if(squads.length) { %>
+                <div class="">
+                    <label>Squad</label>
+                    <select name="squad">
+                        <option value="">None</option>
+                        <% for(let squad of squads) { %>
+                            <% if(name && squad.name === hero.squad) { %>
+                                <option selected="selected" value="<%= squad.name %>"><%= squad.name %></option>
+                            <% } else { %>
+                                <option value="<%= squad.name %>"><%= squad.name %></option>
+                            <% } %>
+                        <% } %>
+                    </select>
+                </div>
+            <% } %>
+        </div>
+
         <div class="input-group">
             <label>Name</label>
             <input type="text" name="name" required <% if(name) { %>value="<%= name %>" <% } %>>
