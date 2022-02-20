@@ -68,6 +68,7 @@ updateHero = function({params, body}, res) {
             agility: body.agility,
             luck: body.luck
         }
+        hero.squad = body.squad ? body.squad : undefined;
         hero.save((error, updatedHero) => {
             if (error) { return res.send({ error }); }
             res.redirect("/heroes");
@@ -93,9 +94,15 @@ reset = function (req, res) {
 }
 
 getSquadsIndex = function(req, res) {
-    Squad.find((error, squads) => {
+    Squad.find({}, null, { lean: true },(error, squads) => {
         if (error) { return res.send({ error }); }
-        res.render("squads", { title: "Squads", squads });
+        Hero.find((error, heroes) => {
+            if (error) { return res.send({ error }); }
+            for (let index = 0; index < squads.length; index++ ) {
+                squads[index].heroes = heroes.filter(hero => hero.squad === squads[index].name);
+            }
+            res.render("squads", { title: "Squads", squads });
+        })
     })
 }
 
