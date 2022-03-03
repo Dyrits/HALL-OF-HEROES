@@ -1,15 +1,23 @@
 const mongoose = require("mongoose");
 const Hero = mongoose.model("Hero");
 const Squad = mongoose.model("Squad");
-const { heroes } = require("../../data");
+const { heroes, squads } = require("../../data");
+const {resolveInclude} = require("ejs");
+
+function getOverall(hero) {
+    let { strength, perception, endurance, charisma, intelligence, agility, luck } = hero.stats;
+    return [strength, perception, endurance, charisma, intelligence, agility, luck]
+        .reduce((accumulator, value) => accumulator + value);
+}
 
 getIndex = function(req, res, next) {
     res.render('index', { title: 'Mongoose' });
 }
 
 getHeroesIndex = function(req, res, next) {
-    Hero.find((error, heroes) => {
+    Hero.find({}, "", { lean: true }, (error, heroes) => {
         if (error) { return res.send({ error }); }
+        for (let hero of heroes) { hero.overall || (hero.overall = getOverall(hero)); }
         res.render("heroes", {title: "Hall of Heroes", heroes });
     });
 }
@@ -47,6 +55,7 @@ createNewHero = function({ body }, res) {
     }
     body.origin && ( hero.origin = body.origin );
     body.squad && (hero.squad = body.squad);
+    hero.overall = getOverall(hero);
     Hero.create(hero, (error, newHero) => {
         if (error) { return res.send({ error }); }
         res.redirect("/heroes");
@@ -68,6 +77,7 @@ updateHero = function({params, body}, res) {
             agility: body.agility,
             luck: body.luck
         }
+        hero.overall = getOverall(hero);
         hero.squad = body.squad ? body.squad : undefined;
         hero.save((error, updatedHero) => {
             if (error) { return res.send({ error }); }
@@ -84,22 +94,43 @@ deleteHero = function({ params }, res) {
 }
 
 reset = function (req, res) {
-    Hero.deleteMany({}, (error, info) => {
-        if (error) { return res.send({ error }); }
+    Promise.all([
+        new Promise((resolve, reject) => {
+            Hero.deleteMany({}, (error, info) => {
+                if (error) {
+                    reject("An error occurred while deleting the heroes.")
+                    return res.send({ error });
+                }
+                resolve("The heroes have been successfully deleted!");
+            });
+        }),
+        new Promise((resolve, reject) => {
+            Squad.deleteMany({}, (error, info) => {
+                if (error) {
+                    reject("An error occurred while deleting the squads.")
+                    return res.send({ error });
+                }
+                resolve("The squads have been successfully deleted!");
+            });
+        })
+    ]).then(() => {
         Hero.insertMany(heroes, (error, info) => {
             if (error) { return res.send({ error }); }
-            res.redirect("/heroes");
-        })
-    });
+        });
+        Squad.insertMany(squads, (error, info) => {
+            if (error) { return res.send({ error }); }
+        });
+    }).then(() => { res.redirect("/heroes"); })
 }
 
 getSquadsIndex = function(req, res) {
     Squad.find({}, null, { lean: true },(error, squads) => {
         if (error) { return res.send({ error }); }
-        Hero.find((error, heroes) => {
+        Hero.find({ squad : { $exists: true } }, "", { lean: true }, (error, heroes) => {
             if (error) { return res.send({ error }); }
             for (let index = 0; index < squads.length; index++ ) {
                 squads[index].heroes = heroes.filter(hero => hero.squad === squads[index].name);
+                squads[index].overall = squads[index].heroes.reduce((accumulator, current) => accumulator + current.overall, 0);
             }
             res.render("squads", { title: "Squads", squads });
         })
@@ -121,9 +152,28 @@ createSquad = function({ body }, res) {
 }
 
 deleteSquad = function({ params }, res) {
-    Squad.findByIdAndRemove(params.id, (error) => {
+    Squad.findByIdAndRemove(params.id, (error, squad) => {
         if (error) { return res.send({ error }); }
-        res.redirect("/squads");
+        Hero.find({ squad: { $exists: true } }, "squad", {}, (error, heroes) => {
+            if (error) { return res.send({ error }); }
+            let promises = [];
+            for (let hero of heroes.filter(hero => hero.squad === squad.name)) {
+                hero.squad = undefined
+                let promise = new Promise((resolve, reject) => {
+                    hero.save((error) => {
+                        if(error) {
+                            reject("The hero couldn't be saved.");
+                            return res.send({ error })
+                        }
+                        resolve("Hero saved successfully!");
+                    });
+                });
+                promises.push(promise);
+            }
+            Promise.all(promises).then(() => {
+                res.redirect("/squads");
+            });
+        })
     })
 }
 

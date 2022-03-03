@@ -27,17 +27,11 @@
                 <li>A: <%= hero.stats.agility %></li>
                 <li>L: <%= hero.stats.luck %></li>
             </ul>
-            <%
-                let {strength, perception, endurance, charisma, intelligence, agility, luck} = hero.stats;
-                let arr = [strength, perception, endurance, charisma, intelligence, agility, luck];
-                let overall = arr.reduce((accumulator, current) => accumulator + current, 0);
-            %>
 
-
-            <h3>Overall: <%= overall %></h3>
+            <h3>Overall: <%= hero.overall %></h3>
             <form>
-                <input type="submit" class="link" value="Update" formaction="/update-hero/<%= hero.id %>" formmethod="get">
-                <input type="submit" class="link" value="Delete" formaction="/delete-hero/<%= hero.id %>" formmethod="post">
+                <input type="submit" class="link" value="Update" formaction="/update-hero/<%= hero._id %>" formmethod="get">
+                <input type="submit" class="link" value="Delete" formaction="/delete-hero/<%= hero._id %>" formmethod="post">
             </form>
         </div>
 

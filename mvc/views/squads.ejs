@@ -1,0 +1,32 @@
+<%- include("./partials/header.ejs"); %>
+
+<h1>Squads</h1>
+<a href="/heroes">Go back</a><br>
+<a href="/create-squad">Create a new Squad</a>
+
+<div class="squads">
+
+    <% for(let squad of squads) { %>
+
+        <div class="squad">
+            <h2><small>Squad Name:</small> <%= squad.name %></h2>
+            <h3>Headquarter Location: <%= squad.headquarter %></h3>
+            <details>
+                <summary>Active member: <%= squad.heroes.length %></summary>
+                <ul>
+                    <% for(let hero of squad.heroes) { %>
+                        <li><%= hero.name %> (<%= hero.overall %>)</li>
+                    <% } %>
+                </ul>
+            </details>
+            <h2>Squad Overall: <%= squad.overall %></h2>
+            <form action="/delete-squad/<%= squad._id %>" method="post">
+                <input type="submit" class="link" value="Disband Squad">
+            </form>
+        </div>
+
+    <% } %>
+
+</div>
+
+<%- include("./partials/footer.ejs"); %>

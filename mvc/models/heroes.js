@@ -15,6 +15,7 @@ const heroSchema = new mongoose.Schema({
     description: { type: String, required: true },
     origin: { type: String, default: "Unknown" },
     stats: { type: statsSchema, required: true },
+    overall: Number,
     squad: String
 });
 
