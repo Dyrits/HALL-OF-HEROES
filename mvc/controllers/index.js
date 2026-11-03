@@ -7,7 +7,7 @@ const {resolveInclude} = require("ejs");
 function getOverall(hero) {
     let { strength, perception, endurance, charisma, intelligence, agility, luck } = hero.stats;
     return [strength, perception, endurance, charisma, intelligence, agility, luck]
-        .reduce((accumulator, value) => accumulator + value);
+        .reduce((accumulator, value) => accumulator + Number(value), 0);
 }
 
 getIndex = function(req, res, next) {
